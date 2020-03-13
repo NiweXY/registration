@@ -1,0 +1,17 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<items>
+  <item>
+    <CDATA>
+      <login>vasia</login>
+      <name>vasia@mail.com</name>
+      <password>qweqwe1</password>
+    </CDATA>
+  </item>
+  <item>
+    <CData>
+      <login>kolia</login>
+      <name>kolia@mail.com</name>
+      <password>qweqwe2</password>
+    </CData>
+  </item>
+</items>
