@@ -8,12 +8,20 @@ using System.Web.Mvc;
 using System.Web.Security;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 using web.Models;
+
 
 namespace web.Controllers
 {
     public class AccountController : Controller//Функціїї авторизації та автентифікації користувачів
     {
+
+        [AllowAnonymous]
+        public ActionResult NotAuthorized()
+        {
+            return View();
+        }
 
         public ActionResult Login()
         {
@@ -21,10 +29,11 @@ namespace web.Controllers
         }
         [HttpPost]
         [ValidateAntiForgeryToken]
+
         public ActionResult Login(LoginModel model)
         {
-
-            if (ModelState.IsValid)
+           
+                if (ModelState.IsValid)
             {
 
                 User user = null;
@@ -34,7 +43,7 @@ namespace web.Controllers
                 }
                 if (user != null)
                 {
-
+                    
                     FormsAuthentication.SetAuthCookie(model.Login, true);
                     return RedirectToAction("Index", "Home");
                 }
@@ -42,9 +51,13 @@ namespace web.Controllers
                 {
                     ModelState.AddModelError("", "Користувача з таким логіном та паролем не існує.");
                 }
+            } 
+            if (User.IsInRole(model.Login))
+            {
+                FormsAuthentication.SetAuthCookie(model.Login, true);
+                return RedirectToAction("Index", "Home");
             }
-            return View(model);
-
+            else return View(model);
         }
 
 
@@ -77,51 +90,44 @@ namespace web.Controllers
 
                                 user = db.Users.Where(u => u.Login == model.Login && u.Email == model.Email).FirstOrDefault();
 
-                                    var relativePath = "../DB/data.xml";
+                                    var relativePath = "../data.xml";
                                     var absolutePath = HttpContext.Server.MapPath(relativePath);
-
+                        
                         if (System.IO.File.Exists(absolutePath) == false)
                         {
-                            using (XmlWriter xWr = XmlWriter.Create(Server.MapPath("../DB/data.xml")))
-                            {
-                                xWr.WriteStartDocument();
-                                xWr.WriteStartElement("items");
-                                xWr.WriteStartElement("item");
-                                xWr.WriteStartElement("CDATA");
+                          string filename = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "data.xml");
+                            XmlDocument xdoc = new XmlDocument();
+                            XmlDeclaration xmlDeclaration = xdoc.CreateXmlDeclaration("1.0", "UTF-8", null);
+                            XmlElement root = xdoc.DocumentElement;
+                            xdoc.InsertBefore(xmlDeclaration, root);
+                                XmlElement el1 = xdoc.CreateElement(string.Empty, "items", string.Empty);
+                                xdoc.AppendChild(el1);
+                                XmlElement el2 = xdoc.CreateElement(string.Empty, "item", string.Empty);
+                                el1.AppendChild(el2);
 
-                                xWr.WriteElementString("login", model.Login);
-                                xWr.WriteElementString("name", model.Email);
-                                xWr.WriteElementString("password", model.Password);
-
-                                xWr.WriteEndElement();          // CLOSE LIST.
-                                xWr.WriteEndElement();          // CLOSE LIBRARY.
-
-                                xWr.WriteEndDocument();         // END DOCUMENT.
-                                xWr.Flush();
-                                xWr.Close();
-                            }
+                                XmlNode xlog = xdoc.SelectSingleNode("items/item");
+                                xlog.InnerXml = "<![CDATA["+"{ 'login' :" + "'"+ model.Login+"'" +","
+                                                        + "'name':" + "'"+ model.Email + "'" +","
+                                                        + "'password':"+ "'" + model.Password+ "'" +"}]]> ";
+                            xdoc.Save(filename);    
                         }
                         else
                         {
-                            string filename = "D:../web/web/DB/data.xml";
-                            XElement element = null;
-                            using (var stream = new FileStream(filename, FileMode.Open, FileAccess.Read))
-                            {
-                                element = XElement.Load(stream);
-                            }
+                            string filename = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "data.xml");
 
-                            element.Add(
-                                new XElement("item",
-                                new XElement("CData",
-                                    new XElement("login", model.Login),
-                                    new XElement("name", model.Email),
-                                    new XElement("password", model.Password))));
-                            element.Save(filename);
+                            XmlDocument doc = new XmlDocument();
+                            doc.Load(filename);
+                            XmlNode elem = doc.CreateNode(XmlNodeType.Element, "", "item", "");
+                            elem.InnerXml = "<![CDATA[" + "{ 'login' :" + "'" + model.Login + "'" + ","
+                                                        + "'name':" + "'" + model.Email + "'" + ","
+                                                        + "'password':" + "'" + model.Password + "'" + "}]]> ";
+                            
+                            doc.LastChild.AppendChild(elem);
+                            doc.Save(filename);
                         }
-                            }//якщо користувач успішно доданий
+                    }//якщо користувач успішно доданий
                             if (user != null)
                             {
-                                 
                                 FormsAuthentication.SetAuthCookie(model.Login, true);
                                  return RedirectToAction("Index", "Home");
                             }
@@ -131,12 +137,18 @@ namespace web.Controllers
                         {
                          ModelState.AddModelError("", "Користувач з таким аккаунтом вже існує");
                         } 
-                        //return Json(user, JsonRequestBehavior.AllowGet);              
+                       //return Json(user, JsonRequestBehavior.AllowGet);              
                         
             } return View(model);
         }
-               
-    
+
+
+        public ActionResult Logout()
+        {
+            Session.Clear();
+            return RedirectToAction("Login", "Home");
+        }
+
 
         public ActionResult signupAsJSONAsync(string name)
         {
@@ -147,3 +159,4 @@ namespace web.Controllers
 
     }
 }
+

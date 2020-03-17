@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<items>
+  <item><![CDATA[{ 'login' :'admin','name':'admin@mail.com','password':'123'}]]></item>
+  <item><![CDATA[{ 'login' :'admin1','name':'admin1@mail.com','password':'123'}]]></item>
+  <item><![CDATA[{ 'login' :'admin2','name':'adm@gmail.com','password':'1234'}]]> </item>
+</items>

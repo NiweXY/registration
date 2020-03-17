@@ -10,10 +10,10 @@ namespace web.Controllers
     public class HomeController : Controller
     {
         
-        [Authorize]
+       [Authorize]
         public ActionResult Index(User user)
         {
-            
+             
             if (User.Identity.IsAuthenticated)
             {
                ViewBag.user = user;
